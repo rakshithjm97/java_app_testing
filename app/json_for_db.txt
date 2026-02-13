@@ -1,0 +1,6 @@
+{
+  "userid": 1,
+  "name": "Anna Smith",
+  "email": "anna.smith@example.com",
+  "interests": "coding"
+}
