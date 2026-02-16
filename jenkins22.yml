@@ -1,0 +1,66 @@
+ #!/usr/bin/env groovy 
+
+pipeline {
+    agent any
+    tools {
+        nodejs 'node18'
+    }
+    environment {
+    APP_VERSION = "1.0.${BUILD_NUMBER}"
+}
+
+
+    stages {
+        stage("Clean Workspace") {
+            steps {
+                deleteDir()
+            }
+        }
+        stage("chekout code"){
+            steps {
+                git branch: 'main',
+                url: 'https://github.com/rakshithjm97/java_app_testing.git'
+            }
+            
+        }
+        stage("Building application") {
+            steps {
+                
+                echo "building the application"
+                dir ('app') {
+                    sh 'pwd'
+                    sh 'ls -la'
+                    
+                    sh 'node -v'
+                    sh 'npm -v'
+                
+                    sh 'npm install'
+                    sh 'npm run build || echo "no build script , skipping"'
+                }
+                 
+            }
+        }
+        stage("pusing to docker repo") { 
+            steps {
+                echo "Pushing to docker repo"
+                withCredentials ([usernamePassword(
+                      credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                    
+                    )]) {
+                        sh '''
+                        VERSION=1.0.${BUILD_NUMBER}
+                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                          
+                          docker build -t rakshithjm7/test_java:$VERSION .
+                          docker build -t $DOCKER_USER/java-app:latest .
+                          
+                          docker push rakshithjm7/test_java:$VERSION
+                          docker push $DOCKER_USER/java-app:latest
+                          '''
+                    }
+            }
+        }
+    }
+}
