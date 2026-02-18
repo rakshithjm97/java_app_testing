@@ -1,3 +1,5 @@
+#1/bin/bash groovy
+
 pipeline {
     agent any
 
